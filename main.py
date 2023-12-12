@@ -6,7 +6,7 @@ from PyQt5.uic import loadUi
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-
+print("sdfsdf")
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Second Window
