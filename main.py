@@ -6,7 +6,7 @@ from PyQt5.uic import loadUi
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-print("do not useeeeee")
+
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Second Window
@@ -18,13 +18,16 @@ class SecondWindow(QMainWindow):
         self.fs = execute_fsam.FSAM()
         self.right_arrow = False
 
-    def load_image(self, filepath):
+    def load_image(self, folder, file_list):
+        self.folder = folder
+        self.file_list = file_list
         # 이미지 불러오기
         self.scene = QGraphicsScene(self)
         self.graphv.setScene(self.scene)
         self.graphv.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.graphv.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        pixmap = QPixmap(filepath)
+        # pixmap = QPixmap(filepath)
+        pixmap = QPixmap(f'{self.folder}/{self.file_list[0]}')
         w = int(pixmap.width()*0.5)
         h = int(pixmap.height()*0.5)
         pixmap = pixmap.scaled(w, h, Qt.AspectRatioMode.KeepAspectRatioByExpanding, Qt.TransformationMode.SmoothTransformation) # 종횡비 및 scale 할 때 이미지 화질 조정
@@ -65,8 +68,9 @@ class Thread_1(QThread):
         super().__init__(parent)
         self.w = SecondWindow()
 
-    def open_image(self, filepath):
-        self.w.load_image(filepath)
+    @pyqtSlot(str, list)
+    def open_image(self, folder, file_list):
+        self.w.load_image(folder, file_list)
         self.w.show()
 
     def thd_1_stop(self):
@@ -74,6 +78,7 @@ class Thread_1(QThread):
 
 # Main Window
 class MainWindow(QMainWindow):
+    command = pyqtSignal(str, list)
     def __init__(self):
         super(MainWindow, self).__init__()
         loadUi(f"{DIR_PATH}/mainwindow.ui", self)
@@ -91,23 +96,26 @@ class MainWindow(QMainWindow):
     def keyReleaseEvent(self, event):
         self.right_arrow = False
 
+    @pyqtSignal()
     def open_folder_btn_clicked(self):    # load image file
         self.folder = QFileDialog.getExistingDirectory(self, "Select Directory")
         file_names = os.listdir(self.folder)    # ['dogs.jpg', 'cat.jpg']
-        file_name_idx = 0
-        if file_names is None:
-            return
-        if self.right_arrow:
-            file_name_idx += 1
-            self.thd_1.open_image(f'{self.folder}/{file_names[file_name_idx]}')
-            self.thd_1.w.move(self.x() + self.width(), self.y())    # mainwindow 옆에 secondwindow 열기
-            self.thd_1.start()
-            self.thd_1.thd_1_stop()
-        else:
-            self.thd_1.open_image(f'{self.folder}/{file_names[file_name_idx]}')
-            self.thd_1.w.move(self.x() + self.width(), self.y())    # mainwindow 옆에 secondwindow 열기
-            self.thd_1.start()
-            self.thd_1.thd_1_stop()
+        self.command.emit(self.folder, file_names)
+
+        # self.thd_1.open_image(f'{self.folder}/{file_names[file_name_idx]}')
+        # self.thd_1.w.move(self.x() + self.width(), self.y())    # mainwindow 옆에 secondwindow 열기
+        # self.thd_1.start()
+        # self.thd_1.thd_1_stop()
+        # file_name_idx = 0
+        # if file_names is None:
+        #     return
+        # if self.right_arrow:
+        #     file_name_idx += 1
+        # else:
+        #     self.thd_1.open_image(f'{self.folder}/{file_names[file_name_idx]}')
+        #     self.thd_1.w.move(self.x() + self.width(), self.y())    # mainwindow 옆에 secondwindow 열기
+        #     self.thd_1.start()
+        #     self.thd_1.thd_1_stop()
 
         # for file_name in file_names:
 
